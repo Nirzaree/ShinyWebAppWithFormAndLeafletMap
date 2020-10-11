@@ -11,7 +11,7 @@ following features:
     + Marker colors by variables 
   4. Recaptcha for security
 
-Stepwise building of the webapp has been explained in this [post]().
+Stepwise building of the webapp has been explained in this [blog post](https://nirzaree.wordpress.com/2020/10/11/building-a-webapp-for-data-collection-visualization-using-r-shiny/).
 
 Steps to get the code running:     
   1. If you require any google maps api keys, then
