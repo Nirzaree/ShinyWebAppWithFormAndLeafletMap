@@ -1,6 +1,7 @@
 Shiny WebApp With Form & Leaflet Map
 ================
 
+* The project now has a domain name too: sustainableeateries.com/ *
 This repo contains the code to make a webapp using R Shiny with the
 following features: 
   1. Form that feeds data to google sheets 
@@ -28,7 +29,7 @@ keys (site key and secret key) from
 ![Demo of the code in the
 repo](gitcodefinal.gif)
 
-Additionally, if you would like to contribute data about how sustainable are eateries around you, check the webapp live at http://18.223.166.120:3838/
+Additionally, if you would like to contribute data about how sustainable are eateries around you, check the webapp live at http://18.223.166.120/
 
 ![](finalappflow.gif) 
 
