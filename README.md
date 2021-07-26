@@ -1,7 +1,8 @@
 Shiny WebApp With Form & Leaflet Map
 ================
 
-* The project now has a domain name too: sustainableeateries.com/ *
+* The project now has a domain name too: sustainableeateries.com/
+
 This repo contains the code to make a webapp using R Shiny with the
 following features: 
   1. Form that feeds data to google sheets 
