@@ -30,7 +30,7 @@ keys (site key and secret key) from
 ![Demo of the code in the
 repo](gitcodefinal.gif)
 
-Additionally, if you would like to contribute data about how sustainable are eateries around you, check the webapp live at http://18.223.166.120/
+Additionally, if you would like to contribute data about how sustainable are eateries around you, check the webapp live at http://sustainableeateries.com/
 
 ![](finalappflow.gif) 
 
