@@ -4,32 +4,35 @@ library(leaflet)
 library(googleway)
 library(googlesheets4)
 library(data.table)
-library(inlmisc)
 library(shinyCAPTCHA)
+library(leaflet.extras)
 library(shinyjs)
 
+# define values for all the constants ------------------------------------
+GOOGLE_MAPS_API_KEY <- 
+RECAPTCHA_SITE_KEY <- 
+RECAPTCHA_SECRET_KEY <-
+GOOGLE_SHEETS_ID <- #get sheet id: as_sheets_id(URL)
+
+DATA_READ_SHEET_NAME <- "MeanRatingTable" #sheet from which to read the data
+DATA_WRITE_SHEET_NAME <- "Raw" #sheet to which we write the data to
+
 # google maps api key ---------------------------------------------------------
-key <- "yourKey"
-set_key(key = key)
+set_key(key = GOOGLE_MAPS_API_KEY)
 google_keys()
 
 # non-interactive auth for googlesheets to read and write data ----------------
 options(gargle_oauth_cache = ".secrets",
-        email = "youremail@id")
-
-# gs4_auth() #required once for the project
-
-#get sheet id: as_sheets_id(URL)
-sheet_id <- "yoursheet_id"
+        email = "youremail@id") #for the first time, and then the command below
+# gs4_auth(path = '.secrets/filename_of_service_acc_token.json')
 
 # read existing data on googlesheet to plot on map ---------------------------
-dtDatasofar <- as.data.table(read_sheet(ss = sheet_id,
-                                        sheet = "Aggregate"))
+dtDatasofar <- as.data.table(read_sheet(ss = GOOGLE_SHEETS_ID,
+                                        sheet = DATA_READ_SHEET_NAME))
 if (nrow(dtDatasofar) > 0) {
-  dtDatasofar[, Latitude := as.numeric(Latitude)]
-  dtDatasofar[, Longitude := as.numeric(Longitude)]
-  names(dtDatasofar)[names(dtDatasofar) == "AVERAGE of Rating"] <- "meanRating"
-  dtDatasofar <- dtDatasofar[!is.na(meanRating)]
+  dtDatasofar[, Latitude := as.numeric(Lat)]
+  dtDatasofar[, Longitude := as.numeric(Lng)]
+  dtDatasofar <- dtDatasofar[!is.na(MeanRating)]
 }
 
 # ui logic -------------------------------------------------------------------------
@@ -53,14 +56,14 @@ ui <- fluidPage(
                  Shiny.setInputValue('jsAddress', place.formatted_address);     
                  });
                  } </script> 
-                 <script src='https://maps.googleapis.com/maps/api/js?key=", key, "&libraries=places&callback=initAutocomplete' async defer></script>")),
+                 <script src='https://maps.googleapis.com/maps/api/js?key=", GOOGLE_MAPS_API_KEY, "&libraries=places&callback=initAutocomplete' async defer></script>")),
       sliderInput("sliderinput",
                   "Sustainability Rating:",
                   min = 1,
                   max = 5,
                   value = 2),
       recaptchaUI("test", 
-                  sitekey = "yoursitekey"),
+                  sitekey = RECAPTCHA_SITE_KEY),
       uiOutput("humansOnly")
     ),
     # Plot existing data
@@ -77,7 +80,7 @@ server <- function(input, output) {
   output$LeafletMap <- renderLeaflet({
     #function to get color of the marker based on the mean rating 
     getColor <- function(dtData) {
-      sapply(dtData[, meanRating], function(rating) {
+      sapply(dtData[, MeanRating], function(rating) {
         if (rating >= 4) {
           "green"
         } else if (rating >= 3) {
@@ -104,23 +107,19 @@ server <- function(input, output) {
       # Generate leaflet
       map <- leaflet(dtDatasofar) %>% 
         addTiles() %>% 
+        addResetMapButton() %>%
         addMarkers(~Longitude,
                    ~Latitude,
                    icon = ~ColoredIcons[MarkerColor],
                    group = "markers",
-                   label = paste0(dtDatasofar[, Name],
+                   label = paste0(dtDatasofar[, EateryName],
                                   ":",
-                                  dtDatasofar[, meanRating]),
+                                  dtDatasofar[, MeanRating]),
                    clusterId = "cluster",
-                   clusterOptions = markerClusterOptions())
+                   clusterOptions = markerClusterOptions())  %>% 
+        addSearchFeatures(targetGroups = "markers", 
+                          options = searchFeaturesOptions())
       #Additional map options: clusters, search button, home button
-      map <- inlmisc::AddHomeButton(map)
-      map <- inlmisc::AddClusterButton(map,
-                                       clusterId = "cluster")
-      map <- inlmisc::AddSearchButton(map,
-                                      group = "markers",
-                                      zoom = 15,
-                                      textPlaceholder = "Search here")
     } else {
       #empty map when no data
       map <- leaflet() %>% addTiles()
@@ -130,7 +129,7 @@ server <- function(input, output) {
   #recaptcha 
   result <- callModule(recaptcha,
                        "test",
-                       secret = "yoursecretkey")
+                       secret = RECAPTCHA_SECRET_KEY)
   
   #if recaptcha successful
   output$humansOnly <- renderUI({
@@ -147,14 +146,15 @@ server <- function(input, output) {
       Rating <- input$sliderinput
     )
     #Put data on drive
-    sheet_append(ss = sheet_id,
+    sheet_append(ss = GOOGLE_SHEETS_ID,
                  data = dtData,
-                 sheet = "Raw")
+                 sheet = DATA_WRITE_SHEET_NAME)
     
     #Say thankyou
     h5("Thanks for entering data. View all responses",
        a("here",
-         href = "https://docs.google.com/spreadsheets/d/yoursheet_id/edit?usp=sharing")
+         href = paste0("https://docs.google.com/spreadsheets/d/",GOOGLE_SHEETS_ID,"/edit?usp=sharing")
+         )
     )
   })
 }
